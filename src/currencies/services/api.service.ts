@@ -16,7 +16,7 @@ export class ApiService {
 
   protected getUrl(path: string) {
     this.apiKey = this.configService.get<string>('SWOP_API_KEY');
-    this.baseUrl = this.configService.get<string>('SWOP_URL');
+    this.baseUrl = this.configService.get<string>('SWOP_URL', 'https://swop.cx');
     return `${this.baseUrl}${path}?api-key=${this.apiKey}`;
   }
 
