@@ -70,7 +70,7 @@ $ npm run test:cov
 
 ## API routes
 
-- [GET] /csrf-token
+- [GET] /api/csrf-token
 - [GET] /api/currencies/list
 - [POST] /api/currencies/convert
 ```bash
@@ -96,7 +96,7 @@ $ npm run test:cov
 
 ## How to work with the API
 
-1. Get token from /csrf-token
+1. Get token from /api/csrf-token
 2. Add the token as requst header for the other api endpoints
 ```bash
 # Example of header:
