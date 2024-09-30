@@ -42,12 +42,13 @@ export class CurrenciesService {
     );
   }
 
-  async list() {
-    return (
+  async list(): Promise<ListedCurrencyDto[]> {
+    const listCurrenciesApiResponse =
       await this.apiService.get<ListCurrenciesApiResponseDto[]>(
         `/rest/currencies`,
-      )
-    )
+      );
+
+    return listCurrenciesApiResponse
       .filter((item) => item.active)
       .map((item) => new ListedCurrencyDto(item.code));
   }
