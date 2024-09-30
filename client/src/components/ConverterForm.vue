@@ -1,143 +1,155 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref, watchEffect } from 'vue'
+import axios, { AxiosError } from 'axios'
 
-interface Currency {
-  code: string
-}
+import Dropdown from './form/Dropdown.vue'
+import Group from './form/Group.vue'
+import Message from './form/Message.vue'
 
-const generalError = 'Error occured'
+const generalError = 'Something is wrong'
+const error = ref<string>('')
 
 const source = ref<string>('EUR')
 const target = ref<string>('')
-const amount = ref<string>('1')
+const amount = ref<string>('')
 const result = ref<string>('?')
-const currencies = ref<Currency[]>([])
 
-const getToken = async () => {
+const currencies = ref<[]>([])
+
+watchEffect(() => {
+  const amountValue = Number(amount.value)
+  if (isNaN(amountValue) || amountValue <= 0) {
+    amount.value = ''
+  }
+})
+
+const fetchCsrfToken = async (): Promise<string> => {
   try {
-    const response = await axios.get('/csrf-token')
+    const response = await axios.get<string>('/api/csrf-token')
+
     return response.data
-  } catch (error) {
-    alert(generalError)
+  } catch {
+    error.value = generalError
   }
+
+  return ''
 }
 
-const handleSubmit = async () => {
-  if (!amount.value || amount.value == '') return
-  if (!source.value || source.value == '') return
-  if (!target.value || target.value == '') return
-  const formData = {
-    source: source.value,
-    target: target.value,
-    amount: amount.value
+const convert = async () => {
+  error.value = ''
+
+  const amountString = amount.value
+  const sourceCode = source.value
+  const targetCode = target.value
+
+  if (!amountString || !Number(amountString) || Number(amountString) <= 0) {
+    return (error.value = 'Please, fill in amount greater than 0')
   }
-  const token = await getToken()
+  if (!sourceCode) {
+    return (error.value = 'Please, select Source currency.')
+  }
+  if (!targetCode) {
+    return (error.value = 'Please, select Target currency.')
+  }
+
+  const csrfToken = await fetchCsrfToken()
 
   try {
-    const response = await axios.post('/api/currencies/convert', formData, {
-      headers: {
-        'Content-Type': 'application/json',
-        _csrf: token
+    const response = await axios.post(
+      '/api/currencies/convert',
+      {
+        source: sourceCode,
+        target: targetCode,
+        amount: Number(amountString)
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          _csrf: csrfToken
+        }
       }
-    })
+    )
+
     result.value = response.data.localeQuote
-  } catch (error) {
-    alert(generalError)
+  } catch (err: AxiosError | unknown) {
+    if (axios.isAxiosError(err) && err.response && err.response.data.message) {
+      error.value = err.response.data.message
+    } else {
+      error.value = generalError
+    }
   }
 }
 
-const getCurrancies = async () => {
-  const token = await getToken()
+const fetchCurrencies = async (): Promise<void> => {
+  const csrfToken = await fetchCsrfToken()
+
   try {
-    const response = await axios.get('/api/currencies/list', {
+    const { data } = await axios.get('/api/currencies/list', {
       headers: {
-        _csrf: token
+        _csrf: csrfToken
       }
     })
-    return (currencies.value = response.data)
-  } catch (error) {
-    alert(generalError)
+
+    currencies.value = data
+  } catch {
+    error.value = generalError
   }
 }
-getCurrancies()
+fetchCurrencies()
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="result-container">
-      <div class="form-group">
-        <label> Amount:</label>
-        <input type="number" min="0" max="100000000" v-model="amount" @input="handleSubmit" />
-      </div>
-      <div class="form-group">
-        <label> Source:</label>
-        <select v-model="source" disabled @change="handleSubmit">
-          <option value="EUR">EUR</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label> Target:</label>
-        <select v-model="target" @change="handleSubmit">
-          <option v-for="currency in currencies" :key="currency.code">{{ currency.code }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="result">
-      {{ amount }} {{ source }} <small>to</small> {{ target || '?' }} <small>=</small>
-      {{ result || '?' }}
-    </div>
+  <form @submit.prevent="convert">
+    <Group name="Amount:">
+      <input type="number" min="0" v-model="amount" @input="convert" />
+    </Group>
+    <Group name="Source:">
+      <Dropdown
+        :onChange="convert"
+        :options="currencies"
+        optionKey="code"
+        optionValue="code"
+        v-model="source"
+      />
+    </Group>
+    <Group name="Target:">
+      <Dropdown
+        :onChange="convert"
+        :options="currencies"
+        optionKey="code"
+        optionValue="code"
+        v-model="target"
+      />
+    </Group>
   </form>
+  <Message type="error">{{ error }}</Message>
+
+  <Message class="result" v-if="!error">
+    {{ amount }} {{ source }} <small>to</small> {{ target || '?' }} <small>=</small>
+    {{ result || '?' }}
+  </Message>
 </template>
 
 <style scoped>
-.result-container {
+form {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
 }
+.form-group {
+  flex: 1 1 33%;
+  padding: 0 0.5rem;
+}
+@media (max-width: 1023px) {
+  .form-group {
+    flex: 1 1 100%;
+  }
+}
 .result {
-  flex: 1 1 auto;
-  padding: 10px;
-  text-align: center;
-  font-size: 20px;
+  font-size: 2rem;
   font-weight: bold;
 }
 small {
   font-variant: small-caps;
-}
-form {
-  background-color: rgb(52 73 94);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-  color: white;
-}
-.form-group {
-  flex: 1 33%;
-  margin: 0 5px;
-}
-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-input,
-select {
-  width: 100%;
-
-  height: 40px;
-  background-color: white;
-  border-radius: 5px;
-  border: none;
-  padding: 0 20px;
-  outline: none;
-  font-weight: bold;
-  font-size: 18px;
-  &:focus {
-    box-shadow: 0 0 0 3px var(--color-green);
-  }
-}
-input {
-  padding: 0 20px;
 }
 </style>
