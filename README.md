@@ -101,7 +101,7 @@ $ npm run test:cov
 ```bash
 # Example of header:
 {
-  "key": "_csrf",
+  "key": "csrf-token",
   "value": "cd0e7d031bf6c84e6221100..."
 }
 ```
