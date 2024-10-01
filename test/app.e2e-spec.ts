@@ -33,7 +33,7 @@ describe('Static route (e2e)', () => {
 
     return request(server)
       .get('/api')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .expect(404);
   });

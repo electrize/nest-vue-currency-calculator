@@ -14,7 +14,7 @@ export class CSRFMiddleware implements NestMiddleware {
   constructor() {
     const { csrfSynchronisedProtection, generateToken } = csrfSync({
       getTokenFromRequest: (req) => {
-        return req.headers['_csrf'] as string;
+        return req.headers['csrf-token'] as string;
       },
       ignoredMethods: [],
     });

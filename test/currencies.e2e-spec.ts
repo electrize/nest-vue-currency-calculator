@@ -31,7 +31,7 @@ describe('CurrenciesController (e2e)', () => {
   it('/api/currencies/list (GET) sohuld return 200 and array of objects with valid currencies codes', () => {
     return request(server)
       .get('/api/currencies/list')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .expect(200)
       .expect(({ body }) => {
@@ -50,7 +50,7 @@ describe('CurrenciesController (e2e)', () => {
   it('/api/currencies/convert (POST) sohuld return 200 with valid input', () => {
     return request(server)
       .post('/api/currencies/convert')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .send({
         source: 'EUR',
@@ -81,7 +81,7 @@ describe('CurrenciesController (e2e)', () => {
   it('/api/currencies/convert (POST) sohuld return 400 with invalid source', () => {
     return request(server)
       .post('/api/currencies/convert')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .send({
         source: 'EUR1',
@@ -94,7 +94,7 @@ describe('CurrenciesController (e2e)', () => {
   it('/api/currencies/convert (POST) sohuld return 400 with invalid target', () => {
     return request(server)
       .post('/api/currencies/convert')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .send({
         source: 'EUR',
@@ -107,7 +107,7 @@ describe('CurrenciesController (e2e)', () => {
   it('/api/currencies/convert (POST) sohuld return 400 with invalid amount', () => {
     return request(server)
       .post('/api/currencies/convert')
-      .set('_csrf', token)
+      .set('csrf-token', token)
       .set('Cookie', cookie)
       .send({
         source: 'EUR',

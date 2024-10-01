@@ -65,7 +65,7 @@ const convert = async () => {
       {
         headers: {
           'Content-Type': 'application/json',
-          _csrf: csrfToken
+          'csrf-token': csrfToken
         }
       }
     )
@@ -86,7 +86,7 @@ const fetchCurrencies = async (): Promise<void> => {
   try {
     const { data } = await axios.get('/api/currencies/list', {
       headers: {
-        _csrf: csrfToken
+        'csrf-token': csrfToken
       }
     })
 
